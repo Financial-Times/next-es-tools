@@ -1,5 +1,6 @@
+# AWS keys
 auth:
-  # An AWS access key with permissions to read and write to the Elasticsearch service
+  # An access key with permissions to read and write to the Elasticsearch service
   access_key:
   # The secret key to match the access key above
   secret_key:
@@ -9,3 +10,8 @@ clusters:
   eu: https://nextcontent-123.eu-west-1.es.amazonaws.com
   us: https://nextcontent-123.us-east-1.es.amazonaws.com
   dev: https://nextcontentdev-123.eu-west-1.es.amazonaws.com
+
+# API keys
+keys:
+  # Key for the FT content API (V1 and V2)
+  capi:
