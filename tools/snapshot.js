@@ -22,54 +22,54 @@ function createSnapshot ({ repository, name, index }) {
   })
 }
 
-function pingStatus ({ repository, name }) {
-  return client.snapshot.status({
+async function pingStatus ({ repository, name }) {
+  const response = await client.snapshot.status({
     snapshot: name,
     repository
   })
-    .then((response) => {
-      const { state, stats } = response.snapshots.find((item) => item.snapshot === name)
 
-      status.total = stats.number_of_files
-      status.curr = stats.processed_files
+  const { state, stats } = response.snapshots.find((item) => item.snapshot === name)
 
-      // Don't draw a progress bar before we have any data
-      // and don't draw one when AWS gets carried away.
-      if (status.total > 0 && status.curr <= status.total) {
-        status.tick(0)
-      }
+  status.total = stats.number_of_files
+  status.curr = stats.processed_files
 
-      if (state === 'SUCCESS' || state === 'DONE') {
-        return
-      }
+  // Don't draw a progress bar before we have any data
+  // and don't draw one when AWS gets carried away.
+  if (status.total > 0 && status.curr <= status.total) {
+    status.tick(0)
+  }
 
-      if (state === 'FAILED') {
-        status.terminate()
-        return Promise.reject('Snapshot failed')
-      }
+  if (state === 'SUCCESS' || state === 'DONE') {
+    return
+  }
 
-      return wait(10000).then(() => pingStatus({ repository, name }))
-    })
+  if (state === 'FAILED') {
+    status.terminate()
+    return Promise.reject('Snapshot failed')
+  }
+
+  await wait(10 * 1000)
+
+  return pingStatus({ repository, name })
 }
 
-function run (cluster, command) {
+async function run (cluster, command) {
   const opts = command.opts()
 
   client = elastic(cluster)
   status = progress('Creating snapshot')
 
-  return Promise.resolve()
-    .then(() => verifyRepository(opts))
-    .then(() => createSnapshot(opts))
-    .then(() => pingStatus(opts))
-    .then(() => {
-      console.log(`Snapshot "${opts.name}" created for "${opts.index}" index from ${cluster} cluster`)
-      process.exit()
-    })
-    .catch((err) => {
-      console.error(`Snapshot failed: ${err.toString()}`)
-      process.exit(1)
-    })
+  try {
+    await verifyRepository(opts)
+    await createSnapshot(opts)
+    await pingStatus(opts)
+
+    console.log(`Snapshot "${opts.name}" created for "${opts.index}" index from ${cluster} cluster`)
+    process.exit()
+  } catch (err) {
+    console.error(`Snapshot failed: ${err.toString()}`)
+    process.exit(1)
+  }
 }
 
 module.exports = function (program) {
