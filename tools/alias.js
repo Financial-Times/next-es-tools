@@ -63,19 +63,23 @@ function updateAliases (aliases, indices) {
   return client.indices.updateAliases({ body: { actions } })
 }
 
-function run (cluster, command) {
+async function run (cluster, command) {
   client = elastic(cluster)
 
-  return Promise.all([ fetchAliases(), fetchIndices() ])
-    .then(([ aliases, indices ]) => updateAliases(aliases, indices))
-    .then(() => {
-      console.log('Alias complete')
-      process.exit()
-    })
-    .catch((err) => {
-      console.error(`Alias failed: ${err.toString()}`)
-      process.exit(1)
-    })
+  const [ aliases, indices ] = await Promise.all([
+    fetchAliases(),
+    fetchIndices()
+  ])
+
+  try {
+    await updateAliases(aliases, indices)
+
+    console.log('Alias complete')
+    process.exit()
+  } catch (err) {
+    console.error(`Alias failed: ${err.toString()}`)
+    process.exit(1)
+  }
 }
 
 module.exports = function (program) {
