@@ -18,7 +18,7 @@ function createRepository ({ name, bucketName, bucketRegion, bucketRole, bucketF
   })
 }
 
-function run (cluster, command) {
+async function run (cluster, command) {
   const opts = command.opts()
 
   client = elastic(cluster)
@@ -32,15 +32,15 @@ function run (cluster, command) {
     opts.bucketName = `next-elasticsearch-${client.host.region}-backups`
   }
 
-  return createRepository(opts)
-    .then(() => {
-      console.log(`Repository "${opts.name}" created (using the bucket "${opts.bucketName}") for ${cluster} cluster`)
-      process.exit()
-    })
-    .catch((err) => {
-      console.error(`Repository failed: ${err.toString()}`)
-      process.exit(1)
-    })
+  try {
+    await createRepository(opts)
+
+    console.log(`Repository "${opts.name}" created (using the bucket "${opts.bucketName}") for ${cluster} cluster`)
+    process.exit()
+  } catch (err) {
+    console.error(`Repository failed: ${err.toString()}`)
+    process.exit(1)
+  }
 }
 
 module.exports = function (program) {
