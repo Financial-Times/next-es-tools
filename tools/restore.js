@@ -9,8 +9,8 @@ function verifyRepository ({ repository }) {
   return client.snapshot.verifyRepository({ repository })
 }
 
-function restoreSnapshot ({ repository, snapshot, index }) {
-  return client.snapshot.restore({
+async function restoreSnapshot ({ repository, snapshot, index }) {
+  const response = await client.snapshot.restore({
     repository,
     snapshot,
     waitForCompletion: false,
@@ -20,62 +20,66 @@ function restoreSnapshot ({ repository, snapshot, index }) {
       include_aliases: false
     }
   })
-    .then(({ accepted, snapshot }) => {
-      if (!accepted) {
-        if (!snapshot.indices.length) {
-          return Promise.reject(new Error(`No index named "${index}" found`))
-        }
 
-        return Promise.reject(new Error('Nothing to restore'))
-      }
-    })
+  if (!response.accepted) {
+    if (!response.snapshot.indices.length) {
+      return Promise.reject(`No index named "${index}" found`)
+    }
+
+    return Promise.reject('Nothing to restore')
+  }
 }
 
-function pingStatus ({ snapshot, index }) {
-  return client.indices.recovery({ index })
-    .then((response) => {
-      if (response.hasOwnProperty(index)) {
-        const stats = response[index].shards.filter((item) => (
-          item.type === 'SNAPSHOT' && item.source.snapshot === snapshot
-        ))
+async function pingStatus ({ snapshot, index }) {
+  const response = await client.indices.recovery({ index })
 
-        status.total = stats.reduce((count, item) => count + item.index.files.total, 0)
-        status.curr = stats.reduce((count, item) => count + item.index.files.recovered, 0)
+  if (response.hasOwnProperty(index)) {
+    const stats = response[index].shards.filter((item) => (
+      item.type === 'SNAPSHOT' && item.source.snapshot === snapshot
+    ))
 
-        if (status.total > 0 && status.curr <= status.total) {
-          status.tick(0)
-        }
+    status.total = stats.reduce((count, item) => (
+      count + item.index.files.total
+    ), 0)
 
-        if (stats.every(({ stage }) => stage === 'DONE')) {
-          return
-        } else {
-          return wait(10000).then(() => pingStatus({ snapshot, index }))
-        }
-      } else {
-        console.log(`Waiting for restore of "${snapshot}" to start`)
-        return wait(3000).then(() => pingStatus({ snapshot, index }))
-      }
-    })
+    status.curr = stats.reduce((count, item) => (
+      count + item.index.files.recovered
+    ), 0)
+
+    if (status.total > 0 && status.curr <= status.total) {
+      status.tick(0)
+    }
+
+    if (stats.every(({ stage }) => stage === 'DONE')) {
+      return
+    } else {
+      await wait(10 * 1000)
+    }
+  } else {
+    console.log(`Waiting for restore of "${snapshot}" to start`)
+    await wait(3000)
+  }
+
+  return pingStatus({ snapshot, index })
 }
 
-function run (cluster, command) {
+async function run (cluster, command) {
   const opts = command.opts()
 
   client = elastic(cluster)
   status = progress('Restoring snapshot')
 
-  return Promise.resolve()
-    .then(() => verifyRepository(opts))
-    .then(() => restoreSnapshot(opts))
-    .then(() => pingStatus(opts))
-    .then(() => {
-      console.log(`Restored "${opts.snapshot}" snapshot of "${opts.index}" index to ${cluster} cluster`)
-      process.exit()
-    })
-    .catch((err) => {
-      console.error(`Restore failed: ${err.toString()}`)
-      process.exit(1)
-    })
+  try {
+    await verifyRepository(opts)
+    await restoreSnapshot(opts)
+    await pingStatus(opts)
+
+    console.log(`Restored "${opts.snapshot}" snapshot of "${opts.index}" index to ${cluster} cluster`)
+    process.exit()
+  } catch (err) {
+    console.error(`Restore failed: ${err.toString()}`)
+    process.exit(1)
+  }
 }
 
 module.exports = function (program) {
