@@ -2,7 +2,7 @@
   "name": "@financial-times/n-es-tools",
   "version": "0.0.0",
   "dependencies": {
-    "async-sema": "^1.2.0",
+    "async-sema": "^2.0.0",
     "aws-sdk": "^2.124.0",
     "chalk": "^2.3.0",
     "commander": "^2.11.0",
