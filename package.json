@@ -26,7 +26,7 @@
     "n-es-tools": "bin/tools"
   },
   "devDependencies": {
-    "@financial-times/n-gage": "^1.8.4",
+    "@financial-times/n-gage": "^3.0.0",
     "npm-prepublish": "^1.2.2",
     "standard": "^8.5.0"
   },
