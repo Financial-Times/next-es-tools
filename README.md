@@ -4,7 +4,7 @@ A useful CLI for working with Next's Elasticsearch clusters. Includes tools to s
 
 ## Prerequisites
 
-- Node 8.11+
+- Node version defined by `engines.node` in `package.json`. Run command `nvm use` to switch your local Node version to the one specified in `.nvmrc`.
 - [Vault CLI](https://github.com/Financial-Times/vault/wiki/Getting-Started#login-with-the-cli) (optional, see notes below)
 
 ## Installation and setup
