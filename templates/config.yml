@@ -7,9 +7,9 @@ auth:
 
 # Paths to the Elasticsearch clusters to be managed
 clusters:
-  eu: {{ELASTIC_SEARCH_HOST_EU}}
-  us: {{ELASTIC_SEARCH_HOST_US}}
-  dev: {{ELASTIC_SEARCH_HOST_DEV}}
+  eu: {{ELASTICSEARCH_V7_HOST_EU}}
+  us: {{ELASTICSEARCH_V7_HOST_US}}
+  dev: {{ELASTICSEARCH_V7_HOST_DEV}}
   local: http://localhost:9200
 
 # API keys

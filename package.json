@@ -2,11 +2,12 @@
   "name": "@financial-times/n-es-tools",
   "version": "0.0.0",
   "dependencies": {
+    "@elastic/elasticsearch": "~7.9.0",
     "async-sema": "^3.0.0",
+    "aws-elasticsearch-connector": "^9.0.3",
     "aws-sdk": "^2.124.0",
     "chalk": "^2.3.0",
     "commander": "^3.0.0",
-    "elasticsearch": "^16.0.0",
     "http-aws-es": "^4.0.0",
     "js-yaml": "^3.10.0",
     "mkdirp": "^0.5.1",

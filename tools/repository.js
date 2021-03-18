@@ -24,7 +24,7 @@ function run (cluster, command) {
   client = elastic(cluster)
 
   if (!opts.bucketName) {
-    opts.bucketName = `next-elasticsearch-${client.host.region}-backups`
+    opts.bucketName = `next-elasticsearch-v7-${client.host.region}-backups`
   }
 
   return createRepository(opts)
